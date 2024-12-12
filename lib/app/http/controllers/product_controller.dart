@@ -3,6 +3,8 @@ import 'package:blog/app/models/product.dart';
 import 'package:vania/src/exception/validation_exception.dart';
 
 class ProductController extends Controller {
+  List<Map<String, dynamic>> product = [];
+
   Future<Response> index() async {
     return Response.json({'message': 'Hello World'});
   }
@@ -11,13 +13,15 @@ class ProductController extends Controller {
     try {
       // Tambahkan validasi
       request.validate({
-        'name': 'required',
-        'description': 'required',
-        'price': 'required',
+        'vend_id': 'required',
+        'prod_name': 'required',
+        'prod_price': 'required',
+        'prod_desc': 'required',
       }, {
-        'name.required': 'Nama tidak boleh kosong',
-        'description.required': 'Deskripsi tidak boleh kosong',
-        'price.required': 'Price tidak boleh kosong',
+        'vend_id.required': 'Vendor tidak boleh kosong',
+        'prod_name.required': 'Nama produk tidak boleh kosong',
+        'prod_price.required': 'Price tidak boleh kosong',
+        'prod_desc.required': 'Deskripsi tidak boleh kosong',
       });
 
       final requestData = request.input();
@@ -39,19 +43,22 @@ class ProductController extends Controller {
     try {
       // Validasi input
       request.validate({
-        'name': 'required|string|max_length:100',
-        'description': 'required|string|max_length:255',
-        'price': 'required|numeric|min:0'
+        'vend_id': 'required|string|max_length:5',
+        'prod_name': 'required|string|max_length:25',
+        'prod_price': 'required|numeric|min:0',
+        'prod_desc': 'required|string'
       }, {
-        'name.required': 'Nama produk wajib diisi',
-        'name.string': 'Nama produk harus berupa teks',
-        'name.max_length': 'Nama produk maksimal 100 karakter',
-        'description.required': 'Deskripsi produk wajib diisi',
-        'description.string': 'Deskripsi produk harus berupa teks',
-        'description.max_length': 'Deskripsi produk maksimal 255 karakter',
-        'price.required': 'Harga produk wajib diisi',
-        'price.numeric': 'Harga produk harus berupa angka',
-        'price.min': 'Harga produk tidak boleh kurang dari 0'
+        'vend_id.required': 'ID vendor wajib diisi',
+        'vend_id.string': 'ID vendor harus berupa teks',
+        'vend_id.max_length': 'ID vendor maksimal 5 karakter',
+        'prod_name.required': 'Nama produk wajib diisi',
+        'prod_name.string': 'Nama produk harus berupa teks',
+        'prod_name.max_length': 'Nama produk maksimal 25 karakter',
+        'prod_price.required': 'Harga produk wajib diisi',
+        'prod_price.numeric': 'Harga produk harus berupa angka',
+        'prod_price.min': 'Harga produk tidak boleh kurang dari 0',
+        'prod_desc.required': 'Deskripsi produk wajib diisi',
+        'prod_desc.string': 'Deskripsi produk harus berupa teks'
       });
 
       final productData = request.input();
@@ -59,7 +66,7 @@ class ProductController extends Controller {
       // Cek produk yang sudah ada
       final existingProduct = await Product()
           .query()
-          .where('name', '=', productData['name'])
+          .where('prod_name', '=', productData['prod_name'])
           .first();
 
       if (existingProduct != null) {
@@ -67,8 +74,9 @@ class ProductController extends Controller {
             {'message': 'Produk dengan nama ini sudah ada.'}, 409);
       }
 
-      productData['created_at'] = DateTime.now().toIso8601String();
+      productData['prod_id'] = product.length + 1;
 
+      product.add(productData);
       await Product().query().insert(productData);
 
       return Response.json(
@@ -80,7 +88,8 @@ class ProductController extends Controller {
         return Response.json({'errors': errorMessages}, 400);
       } else {
         return Response.json({
-          'message': 'Terjadi kesalahan di sisi server. Harap coba lagi nanti.'
+          'message': 'Terjadi kesalahan di sisi server. Harap coba lagi nanti.',
+          'error': e.toString(),
         }, 500);
       }
     }
@@ -90,7 +99,8 @@ class ProductController extends Controller {
     try {
       if (id != null) {
         // Jika ada ID, ambil produk spesifik
-        final product = await Product().query().where('id', '=', id).first();
+        final product =
+            await Product().query().where('prod_id', '=', id).first();
 
         if (product == null) {
           return Response.json({
@@ -126,27 +136,29 @@ class ProductController extends Controller {
     try {
       // Validasi input
       request.validate({
-        'name': 'required|string|max_length:100',
-        'description': 'required|string|max_length:255',
-        'price': 'required|numeric|min:0'
+        'vend_id': 'required|string|max_length:5',
+        'prod_name': 'required|string|max_length:25',
+        'prod_price': 'required|numeric|min:0',
+        'prod_desc': 'required|string'
       }, {
-        'name.required': 'Nama produk wajib diisi',
-        'name.string': 'Nama produk harus berupa teks',
-        'name.max_length': 'Nama produk maksimal 100 karakter',
-        'description.required': 'Deskripsi produk wajib diisi',
-        'description.string': 'Deskripsi produk harus berupa teks',
-        'description.max_length': 'Deskripsi produk maksimal 255 karakter',
-        'price.required': 'Harga produk wajib diisi',
-        'price.numeric': 'Harga produk harus berupa angka',
-        'price.min': 'Harga produk tidak boleh kurang dari 0'
+        'vend_id.required': 'ID vendor wajib diisi',
+        'vend_id.string': 'ID vendor harus berupa teks',
+        'vend_id.max_length': 'ID vendor maksimal 5 karakter',
+        'prod_name.required': 'Nama produk wajib diisi',
+        'prod_name.string': 'Nama produk harus berupa teks',
+        'prod_name.max_length': 'Nama produk maksimal 25 karakter',
+        'prod_price.required': 'Harga produk wajib diisi',
+        'prod_price.numeric': 'Harga produk harus berupa angka',
+        'prod_price.min': 'Harga produk tidak boleh kurang dari 0',
+        'prod_desc.required': 'Deskripsi produk wajib diisi',
+        'prod_desc.string': 'Deskripsi produk harus berupa teks'
       });
 
       // Ambil input data produk yang akan diupdate
-      final productData = request.input();
-      productData['updated_at'] = DateTime.now().toIso8601String();
+      final productData =
+          request.only(['vend_id', 'prod_name', 'prod_price', 'prod_desc']);
 
-      // Cek apakah produk ada
-      final product = await Product().query().where('id', '=', id).first();
+      final product = await Product().query().where('prod_id', '=', id).first();
 
       if (product == null) {
         return Response.json({
@@ -155,7 +167,7 @@ class ProductController extends Controller {
       }
 
       // Update data produk
-      await Product().query().where('id', '=', id).update(productData);
+      await Product().query().where('prod_id', '=', id).update(productData);
 
       // Mengembalikan response sukses dengan status 200 OK
       return Response.json({
@@ -163,25 +175,26 @@ class ProductController extends Controller {
         'data': productData, // menampilkan data produk yang diupdate
       }, 200);
     } catch (e) {
-      // Menangani kesalahan validasi
       if (e is ValidationException) {
+        // Menangani kesalahan validasi
         final errorMessages = e.message;
         return Response.json({
           'errors': errorMessages,
         }, 400); // HTTP Status Code 400 Bad Request
+      } else {
+        // Menangani kesalahan tak terduga
+        return Response.json({
+          'message': 'Terjadi kesalahan di sisi server. Harap coba lagi nanti.',
+          'error': e.toString(),
+        }, 500); // HTTP Status Code 500 Server Error
       }
-
-      // Menangani kesalahan tak terduga
-      return Response.json({
-        'message': 'Terjadi kesalahan di sisi server. Harap coba lagi nanti.',
-      }, 500); // HTTP Status Code 500 Server Error
     }
   }
 
   Future<Response> destroy(int id) async {
     try {
       // Cari produk berdasarkan ID
-      final product = await Product().query().where('id', '=', id).first();
+      final product = await Product().query().where('prod_id', '=', id).first();
 
       if (product == null) {
         return Response.json({
@@ -190,7 +203,7 @@ class ProductController extends Controller {
       }
 
       // Hapus produk
-      await Product().query().where('id', '=', id).delete();
+      await Product().query().where('prod_id', '=', id).delete();
 
       return Response.json({
         'message': 'Produk berhasil dihapus.',
