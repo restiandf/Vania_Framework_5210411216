@@ -5,6 +5,9 @@ import 'package:blog/app/http/controllers/orders_controller.dart';
 import 'package:blog/app/http/controllers/vendors_controller.dart';
 import 'package:blog/app/http/controllers/orderitems_controller.dart';
 import 'package:blog/app/http/controllers/produtcnotes_controller.dart';
+import 'package:blog/app/http/controllers/auth_controller.dart';
+import 'package:blog/app/http/controllers/user_controller.dart';
+import 'package:blog/app/http/middleware/authenticate.dart';
 
 class ApiRoute implements Route {
   @override
@@ -13,11 +16,21 @@ class ApiRoute implements Route {
 
     // Product
 
-    Router.post("/api/product", productController.store);
-    Router.get("/api/product", productController.show);
-    Router.get("/api/product/{id}", productController.show);
-    Router.put("/api/product/{id}", productController.update);
-    Router.delete("/api/product/{id}", productController.destroy);
+    Router.post("/api/product", productController.store)
+        .middleware([AuthenticateMiddleware()]);
+
+    Router.get("/api/product", productController.show)
+        .middleware([AuthenticateMiddleware()]);
+
+    Router.get("/api/product/{id}", productController.show).middleware(
+      [AuthenticateMiddleware()],
+    );
+    Router.put("/api/product/{id}", productController.update).middleware(
+      [AuthenticateMiddleware()],
+    );
+    Router.delete("/api/product/{id}", productController.destroy).middleware(
+      [AuthenticateMiddleware()],
+    );
 
     // Customer
 
@@ -57,5 +70,17 @@ class ApiRoute implements Route {
     Router.get("/api/productnotes/{id}", produtcnotesController.show);
     Router.put("/api/productnotes/{id}", produtcnotesController.update);
     Router.delete("/api/productnotes/{id}", produtcnotesController.destroy);
+
+    Router.group(() {
+      Router.post('register', authController.register);
+      Router.post('login', authController.login);
+    }, prefix: 'auth');
+
+    Router.group(() {
+      Router.patch('update-password', userController.updatePassword);
+      Router.get('', userController.index);
+    }, prefix: 'user', middleware: [AuthenticateMiddleware()]);
+
+    // Router.get("me", authController.me).middleware([AuthenticateMiddleware()]);
   }
 }
